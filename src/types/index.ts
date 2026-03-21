@@ -7,6 +7,10 @@ export interface Application {
   last_name: string;
   email: string;
   phone: string;
+  date_of_birth: string | null;
+  gender: "male" | "female" | null;
+  nationality: string;
+  place_of_birth: string | null;
   passport_type: PassportType;
   current_status: ApplicationStatus;
   embassy_location: string;

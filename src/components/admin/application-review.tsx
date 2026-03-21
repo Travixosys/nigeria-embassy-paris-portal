@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft, User, Mail, Phone, FileText, CheckCircle,
-  XCircle, Clock, Send, StickyNote, Eye
+  XCircle, Clock, Send, StickyNote, Eye, Calendar, MapPin
 } from "lucide-react";
 import { StatusBadge, DocStatusBadge } from "@/components/shared/status-badge";
 import { APPLICATION_STATUSES, type ApplicationStatus, DOCUMENT_TYPES, PASSPORT_TYPES } from "@/lib/constants";
@@ -150,9 +150,29 @@ export function ApplicationReview({ application, documents, notes: initialNotes 
                 <span className="font-medium">{application.phone || "—"}</span>
               </div>
               <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-text-muted" />
+                <span className="text-text-muted">Date of Birth:</span>
+                <span className="font-medium">{application.date_of_birth || "—"}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <User className="h-4 w-4 text-text-muted" />
+                <span className="text-text-muted">Gender:</span>
+                <span className="font-medium capitalize">{application.gender || "—"}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-text-muted" />
+                <span className="text-text-muted">Place of Birth:</span>
+                <span className="font-medium">{application.place_of_birth || "—"}</span>
+              </div>
+              <div className="flex items-center gap-2">
                 <FileText className="h-4 w-4 text-text-muted" />
                 <span className="text-text-muted">Type:</span>
                 <span className="font-medium">{PASSPORT_TYPES[application.passport_type]}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <User className="h-4 w-4 text-text-muted" />
+                <span className="text-text-muted">Nationality:</span>
+                <span className="font-medium">{application.nationality}</span>
               </div>
             </div>
           </div>
