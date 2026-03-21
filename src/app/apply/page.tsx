@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { Header } from "@/components/shared/header";
 import { createClient } from "@/lib/supabase/client";
 import { PASSPORT_TYPES, REQUIRED_DOCUMENTS, DOCUMENT_TYPES, type PassportType, type DocumentType } from "@/lib/constants";
@@ -12,7 +13,8 @@ interface FileUpload {
   file: File | null;
 }
 
-export default function ApplyPage() {
+function ApplyForm() {
+  const searchParams = useSearchParams();
   const supabase = createClient();
   const [step, setStep] = useState<"form" | "upload" | "done">("form");
   const [loading, setLoading] = useState(false);
@@ -22,7 +24,10 @@ export default function ApplyPage() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [passportType, setPassportType] = useState<PassportType>("new");
+  const initialType = (searchParams.get("type") as PassportType) || "new";
+  const [passportType, setPassportType] = useState<PassportType>(
+    Object.keys(PASSPORT_TYPES).includes(initialType) ? initialType : "new"
+  );
 
   // Upload state
   const [applicationId, setApplicationId] = useState("");
@@ -290,5 +295,13 @@ export default function ApplyPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function ApplyPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-text-muted">Loading...</div>}>
+      <ApplyForm />
+    </Suspense>
   );
 }
