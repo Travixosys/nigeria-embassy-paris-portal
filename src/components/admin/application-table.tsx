@@ -69,7 +69,7 @@ export function ApplicationTable({ applications }: { applications: Application[]
               <tr key={app.id} className="border-b border-border hover:bg-accent/30 transition-colors">
                 <td className="px-6 py-3">
                   <Link
-                    href={`/admin/applications/${app.id}`}
+                    href={`/admin/applications/${app.reference_number}`}
                     className="font-mono text-primary hover:underline font-medium"
                   >
                     {app.reference_number}
