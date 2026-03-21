@@ -6,7 +6,7 @@ import { Header } from "@/components/shared/header";
 import { createClient } from "@/lib/supabase/client";
 import { PASSPORT_TYPES, REQUIRED_DOCUMENTS, DOCUMENT_TYPES, type PassportType, type DocumentType } from "@/lib/constants";
 import { generateReferenceNumber } from "@/lib/utils";
-import { FileUp, CheckCircle, Upload, X } from "lucide-react";
+import { FileUp, CheckCircle, Upload, RefreshCw, FileText as FileIcon, Image as ImageIcon } from "lucide-react";
 
 interface FileUpload {
   type: DocumentType;
@@ -144,7 +144,7 @@ function ApplyForm() {
                 <p className="text-sm font-medium text-primary mb-1">
                   {PASSPORT_TYPES[passportType]}
                 </p>
-                <p className="text-xs text-text-muted leading-relaxed">
+                <p className="text-xs text-text-muted leading-relaxed mb-3">
                   {{
                     new: "For Nigerian citizens applying for a passport for the first time. You will need your birth certificate, a valid national ID, proof of address in France, a passport photograph, and proof of payment.",
                     renewal: "For renewing an expired or soon-to-expire Nigerian passport. You will need a copy of your current/previous passport, a passport photograph, proof of address in France, and proof of payment.",
@@ -152,6 +152,17 @@ function ApplyForm() {
                     child: "For Nigerian children under 16 years old. You will need the child's birth certificate, a parent's valid national ID, proof of address in France, a passport-sized photograph of the child, and proof of payment.",
                   }[passportType]}
                 </p>
+                <div className="border-t border-primary/10 pt-3">
+                  <p className="text-xs font-medium text-text mb-2">Required Documents</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                    {REQUIRED_DOCUMENTS[passportType].map((docType) => (
+                      <div key={docType} className="flex items-center gap-1.5 text-xs text-text-muted">
+                        <CheckCircle className="h-3.5 w-3.5 text-primary flex-shrink-0" />
+                        <span>{DOCUMENT_TYPES[docType]}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               <form onSubmit={handleFormSubmit} className="space-y-5">
@@ -275,47 +286,87 @@ function ApplyForm() {
               </div>
 
               <form onSubmit={handleUploadSubmit} className="space-y-4">
-                {files.map((fileUpload, index) => (
-                  <div key={fileUpload.type} className="border border-border rounded-md p-4">
-                    <label className="block text-sm font-medium text-text mb-2">
-                      {DOCUMENT_TYPES[fileUpload.type]} *
-                    </label>
-                    {fileUpload.file ? (
-                      <div className="flex items-center justify-between bg-accent rounded-md px-3 py-2">
-                        <div className="flex items-center gap-2 text-sm">
-                          <CheckCircle className="h-4 w-4 text-success" />
-                          <span className="truncate">{fileUpload.file.name}</span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleFileChange(index, null)}
-                          className="p-1 hover:bg-border rounded cursor-pointer"
-                        >
-                          <X className="h-4 w-4 text-text-muted" />
-                        </button>
-                      </div>
-                    ) : (
-                      <label className="flex items-center justify-center gap-2 border-2 border-dashed border-border rounded-md py-6 text-sm text-text-muted hover:border-primary hover:text-primary transition-colors cursor-pointer">
-                        <Upload className="h-4 w-4" />
-                        <span>Click to upload</span>
-                        <input
-                          type="file"
-                          className="hidden"
-                          accept=".pdf,.jpg,.jpeg,.png"
-                          onChange={(e) => handleFileChange(index, e.target.files?.[0] || null)}
-                        />
+                {files.map((fileUpload, index) => {
+                  const isImage = fileUpload.file?.type?.startsWith("image/");
+                  const previewUrl = fileUpload.file && isImage ? URL.createObjectURL(fileUpload.file) : null;
+
+                  return (
+                    <div key={fileUpload.type} className="border border-border rounded-md p-4">
+                      <label className="block text-sm font-medium text-text mb-2">
+                        {DOCUMENT_TYPES[fileUpload.type]} *
                       </label>
-                    )}
-                  </div>
-                ))}
+                      {fileUpload.file ? (
+                        <div className="bg-accent rounded-md p-3">
+                          <div className="flex items-start gap-3">
+                            {/* Preview thumbnail */}
+                            {previewUrl ? (
+                              <img
+                                src={previewUrl}
+                                alt="Preview"
+                                className="w-12 h-12 rounded object-cover border border-border flex-shrink-0"
+                              />
+                            ) : (
+                              <div className="w-12 h-12 rounded bg-border/50 flex items-center justify-center flex-shrink-0">
+                                <FileIcon className="h-6 w-6 text-text-muted" />
+                              </div>
+                            )}
+                            {/* File info */}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-text truncate">{fileUpload.file.name}</p>
+                              <p className="text-xs text-text-muted mt-0.5">
+                                {(fileUpload.file.size / 1024).toFixed(0)} KB &middot; {isImage ? "Image" : "PDF"}
+                              </p>
+                              <div className="flex items-center gap-1 mt-1">
+                                <CheckCircle className="h-3.5 w-3.5 text-success" />
+                                <span className="text-xs font-medium text-success">Uploaded</span>
+                              </div>
+                            </div>
+                            {/* Replace button */}
+                            <label className="flex items-center gap-1 px-2 py-1 rounded text-xs text-text-muted hover:text-primary hover:bg-surface border border-border transition-colors cursor-pointer flex-shrink-0">
+                              <RefreshCw className="h-3 w-3" />
+                              Replace
+                              <input
+                                type="file"
+                                className="hidden"
+                                accept=".pdf,.jpg,.jpeg,.png"
+                                onChange={(e) => handleFileChange(index, e.target.files?.[0] || null)}
+                              />
+                            </label>
+                          </div>
+                        </div>
+                      ) : (
+                        <label className="flex items-center justify-center gap-2 border-2 border-dashed border-border rounded-md py-6 text-sm text-text-muted hover:border-primary hover:text-primary transition-colors cursor-pointer">
+                          <Upload className="h-4 w-4" />
+                          <span>Click to upload</span>
+                          <input
+                            type="file"
+                            className="hidden"
+                            accept=".pdf,.jpg,.jpeg,.png"
+                            onChange={(e) => handleFileChange(index, e.target.files?.[0] || null)}
+                          />
+                        </label>
+                      )}
+                    </div>
+                  );
+                })}
+
+                {/* Upload progress indicator */}
+                <div className="flex items-center justify-between text-xs text-text-muted px-1">
+                  <span>{files.filter((f) => f.file).length} of {files.length} documents uploaded</span>
+                  {files.every((f) => f.file) && (
+                    <span className="text-success font-medium flex items-center gap-1">
+                      <CheckCircle className="h-3 w-3" /> All required documents ready
+                    </span>
+                  )}
+                </div>
 
                 <button
                   type="submit"
-                  disabled={loading || files.every((f) => !f.file)}
+                  disabled={loading || !files.every((f) => f.file)}
                   className="w-full bg-primary text-white rounded-md py-3 text-sm font-medium hover:bg-primary-light transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
                 >
                   <FileUp className="h-4 w-4" />
-                  {loading ? "Uploading..." : "Submit Application"}
+                  {loading ? "Uploading & Submitting..." : files.every((f) => f.file) ? "Submit Application" : `Upload remaining ${files.filter((f) => !f.file).length} document${files.filter((f) => !f.file).length > 1 ? "s" : ""} to continue`}
                 </button>
               </form>
             </div>
