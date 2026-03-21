@@ -144,7 +144,7 @@ function ApplyForm() {
                 <p className="text-sm font-medium text-primary mb-1">
                   {PASSPORT_TYPES[passportType]}
                 </p>
-                <p className="text-xs text-text-muted leading-relaxed">
+                <p className="text-xs text-text-muted leading-relaxed mb-3">
                   {{
                     new: "For Nigerian citizens applying for a passport for the first time. You will need your birth certificate, a valid national ID, proof of address in France, a passport photograph, and proof of payment.",
                     renewal: "For renewing an expired or soon-to-expire Nigerian passport. You will need a copy of your current/previous passport, a passport photograph, proof of address in France, and proof of payment.",
@@ -152,6 +152,17 @@ function ApplyForm() {
                     child: "For Nigerian children under 16 years old. You will need the child's birth certificate, a parent's valid national ID, proof of address in France, a passport-sized photograph of the child, and proof of payment.",
                   }[passportType]}
                 </p>
+                <div className="border-t border-primary/10 pt-3">
+                  <p className="text-xs font-medium text-text mb-2">Required Documents</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                    {REQUIRED_DOCUMENTS[passportType].map((docType) => (
+                      <div key={docType} className="flex items-center gap-1.5 text-xs text-text-muted">
+                        <CheckCircle className="h-3.5 w-3.5 text-primary flex-shrink-0" />
+                        <span>{DOCUMENT_TYPES[docType]}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               <form onSubmit={handleFormSubmit} className="space-y-5">
