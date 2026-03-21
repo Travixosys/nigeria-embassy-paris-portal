@@ -24,6 +24,9 @@ function ApplyForm() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [gender, setGender] = useState<"male" | "female" | "">("");
+  const [placeOfBirth, setPlaceOfBirth] = useState("");
   const initialType = (searchParams.get("type") as PassportType) || "new";
   const [passportType, setPassportType] = useState<PassportType>(
     Object.keys(PASSPORT_TYPES).includes(initialType) ? initialType : "new"
@@ -48,6 +51,9 @@ function ApplyForm() {
         last_name: lastName,
         email,
         phone,
+        date_of_birth: dateOfBirth || null,
+        gender: gender || null,
+        place_of_birth: placeOfBirth || null,
         passport_type: passportType,
         current_status: "draft",
       })
@@ -175,6 +181,43 @@ function ApplyForm() {
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="+33 6 XX XX XX XX"
+                    className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-text mb-1">Date of Birth *</label>
+                    <input
+                      type="date"
+                      required
+                      value={dateOfBirth}
+                      onChange={(e) => setDateOfBirth(e.target.value)}
+                      className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-text mb-1">Gender *</label>
+                    <select
+                      required
+                      value={gender}
+                      onChange={(e) => setGender(e.target.value as "male" | "female")}
+                      className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                    >
+                      <option value="" disabled>Select...</option>
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-text mb-1">Place of Birth</label>
+                  <input
+                    type="text"
+                    value={placeOfBirth}
+                    onChange={(e) => setPlaceOfBirth(e.target.value)}
+                    placeholder="e.g. Lagos, Nigeria"
                     className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
