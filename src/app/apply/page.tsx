@@ -139,6 +139,21 @@ function ApplyForm() {
                 </p>
               </div>
 
+              {/* Type-specific info box */}
+              <div className="mb-6 rounded-md border border-primary/20 bg-primary/5 px-5 py-4">
+                <p className="text-sm font-medium text-primary mb-1">
+                  {PASSPORT_TYPES[passportType]}
+                </p>
+                <p className="text-xs text-text-muted leading-relaxed">
+                  {{
+                    new: "For Nigerian citizens applying for a passport for the first time. You will need your birth certificate, a valid national ID, proof of address in France, a passport photograph, and proof of payment.",
+                    renewal: "For renewing an expired or soon-to-expire Nigerian passport. You will need a copy of your current/previous passport, a passport photograph, proof of address in France, and proof of payment.",
+                    replacement: "For replacing a lost, stolen, or damaged passport. You will need a police declaration (if stolen), your birth certificate, a valid national ID, proof of address in France, a passport photograph, and proof of payment.",
+                    child: "For Nigerian children under 16 years old. You will need the child's birth certificate, a parent's valid national ID, proof of address in France, a passport-sized photograph of the child, and proof of payment.",
+                  }[passportType]}
+                </p>
+              </div>
+
               <form onSubmit={handleFormSubmit} className="space-y-5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
