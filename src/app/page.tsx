@@ -77,18 +77,21 @@ export default function HomePage() {
           <h2 className="text-2xl font-semibold text-text text-center mb-12">Available Services</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
             {[
-              { label: "New Passport Application", href: "/apply" },
-              { label: "Passport Renewal", href: "/apply" },
-              { label: "Replacement (Lost/Damaged)", href: "/apply" },
-              { label: "Child Passport", href: "/apply" },
-            ].map(({ label, href }) => (
+              { label: "New Passport Application", desc: "First-time Nigerian passport issuance", href: "/apply?type=new" },
+              { label: "Passport Renewal", desc: "Renew an expired or expiring passport", href: "/apply?type=renewal" },
+              { label: "Replacement (Lost/Damaged)", desc: "Replace a lost, stolen, or damaged passport", href: "/apply?type=replacement" },
+              { label: "Child Passport", desc: "Passport for minors under 16 years", href: "/apply?type=child" },
+            ].map(({ label, desc, href }) => (
               <Link
                 key={label}
                 href={href}
-                className="flex items-center justify-between bg-surface border border-border rounded-lg px-5 py-4 hover:shadow-md transition-shadow"
+                className="flex items-center justify-between bg-surface border border-border rounded-lg px-5 py-4 hover:shadow-md transition-shadow group"
               >
-                <span className="text-sm font-medium text-text">{label}</span>
-                <ChevronRight className="h-4 w-4 text-text-muted" />
+                <div>
+                  <span className="text-sm font-medium text-text group-hover:text-primary transition-colors">{label}</span>
+                  <p className="text-xs text-text-muted mt-0.5">{desc}</p>
+                </div>
+                <ChevronRight className="h-4 w-4 text-text-muted flex-shrink-0 ml-3" />
               </Link>
             ))}
           </div>
@@ -119,11 +122,12 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-primary-dark text-white/70 py-8 mt-auto">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center text-sm">
-          <p>Embassy of Nigeria &middot; 173 Avenue Victor Hugo, 75116 Paris, France</p>
-          <p className="mt-1">Consular Section &middot; Tel: +33 1 47 04 68 65</p>
-          <p className="mt-3 text-white/50 text-xs">&copy; 2026 Embassy of Nigeria, Paris. All rights reserved.</p>
+      <footer className="bg-primary-dark text-white/60 py-6 mt-auto">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center text-xs leading-relaxed">
+          <p className="font-medium text-white/80">Federal Republic of Nigeria</p>
+          <p className="mt-1">Embassy of Nigeria, Paris &middot; Consular Section</p>
+          <p>173 Avenue Victor Hugo, 75116 Paris, France &middot; Tel: +33 1 47 04 68 65</p>
+          <p className="mt-2 text-white/40">&copy; 2026 Embassy of Nigeria. All rights reserved.</p>
         </div>
       </footer>
     </div>

@@ -44,7 +44,9 @@ export function ApplicationReview({ application, documents, notes: initialNotes 
     showToast(`Status updated to "${APPLICATION_STATUSES[status].label}"`);
     console.log(`[EMAIL] Notification sent to ${application.email}: Status changed to ${APPLICATION_STATUSES[status].label}`);
     setSaving(false);
-    router.refresh();
+
+    // Redirect to dashboard after brief delay so they see the toast
+    setTimeout(() => router.push("/admin"), 1200);
   }
 
   async function handleDocReview(docId: string, reviewStatus: "approved" | "rejected") {
@@ -82,7 +84,7 @@ export function ApplicationReview({ application, documents, notes: initialNotes 
 
   function handleSendUpdate() {
     console.log(`[EMAIL] Update sent to ${application.email}: Your application ${application.reference_number} status is now "${APPLICATION_STATUSES[status].label}"`);
-    showToast(`Email update sent to ${application.email}`);
+    showToast(`Email notification sent to ${application.email}`);
   }
 
   return (
@@ -118,10 +120,10 @@ export function ApplicationReview({ application, documents, notes: initialNotes 
         </Link>
         <div>
           <h1 className="text-xl font-semibold text-text font-mono">{application.reference_number}</h1>
-          <p className="text-sm text-text-muted">{application.first_name} {application.last_name}</p>
+          <p className="text-sm text-text-muted">{application.first_name} {application.last_name} &middot; Last updated: {formatDateTime(application.updated_at)}</p>
         </div>
         <div className="ml-auto">
-          <StatusBadge status={application.current_status} />
+          <StatusBadge status={status} />
         </div>
       </div>
 
@@ -216,32 +218,41 @@ export function ApplicationReview({ application, documents, notes: initialNotes 
         <div className="space-y-6">
           {/* Status Update */}
           <div className="bg-surface rounded-lg border border-border shadow-sm p-6">
-            <h2 className="text-base font-medium text-text mb-4">Update Status</h2>
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value as ApplicationStatus)}
-              className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary mb-3"
-            >
-              {Object.entries(APPLICATION_STATUSES).map(([key, { label }]) => (
-                <option key={key} value={key}>{label}</option>
-              ))}
-            </select>
+            <h2 className="text-base font-medium text-text mb-3">Update Status</h2>
+            <div className="mb-3">
+              <p className="text-xs text-text-muted mb-1.5">Current status</p>
+              <StatusBadge status={status} />
+            </div>
+            <div className="mb-3">
+              <p className="text-xs text-text-muted mb-1.5">Change to</p>
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value as ApplicationStatus)}
+                className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                {Object.entries(APPLICATION_STATUSES).map(([key, { label }]) => (
+                  <option key={key} value={key}>{label}</option>
+                ))}
+              </select>
+            </div>
             <div className="flex gap-2">
               <button
                 onClick={handleStatusUpdate}
                 disabled={saving || status === application.current_status}
                 className="flex-1 bg-primary text-white rounded-md py-2 text-sm font-medium hover:bg-primary-light transition-colors disabled:opacity-50 cursor-pointer"
               >
-                {saving ? "Saving..." : "Save"}
+                {saving ? "Saving..." : "Save & Update"}
               </button>
               <button
                 onClick={handleSendUpdate}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-md border border-border text-sm hover:bg-accent transition-colors cursor-pointer"
+                title="Send email notification to applicant"
               >
                 <Send className="h-3.5 w-3.5" />
                 Notify
               </button>
             </div>
+            <p className="text-xs text-text-muted mt-2">Notify sends a status update email to the applicant.</p>
           </div>
 
           {/* Notes */}
