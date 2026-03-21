@@ -61,7 +61,13 @@ function ApplyForm() {
       .single();
 
     if (error || !data) {
-      alert("Error creating application. Please try again.");
+      console.error("Application creation error:", error);
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      if (!supabaseUrl || supabaseUrl.includes("placeholder")) {
+        alert("Database not configured. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your environment variables.");
+      } else {
+        alert(`Error creating application: ${error?.message || "Unknown error"}. Please try again.`);
+      }
       setLoading(false);
       return;
     }
