@@ -10,7 +10,7 @@ import {
 import { StatusBadge, DocStatusBadge } from "@/components/shared/status-badge";
 import { APPLICATION_STATUSES, type ApplicationStatus, DOCUMENT_TYPES, PASSPORT_TYPES } from "@/lib/constants";
 import { formatDateTime } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/client";
+import { addNote, reviewDocument, updateApplicationStatus } from "@/lib/demo-store";
 import type { Application, Document, ApplicationNote } from "@/types";
 
 interface Props {
@@ -19,13 +19,11 @@ interface Props {
   notes: ApplicationNote[];
 }
 
-export function ApplicationReview({ application, documents, notes: initialNotes }: Props) {
+export function ApplicationReview({ application, documents, notes }: Props) {
   const router = useRouter();
-  const supabase = createClient();
   const [status, setStatus] = useState<ApplicationStatus>(application.current_status);
   const [saving, setSaving] = useState(false);
   const [noteText, setNoteText] = useState("");
-  const [notes, setNotes] = useState(initialNotes);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
@@ -34,12 +32,9 @@ export function ApplicationReview({ application, documents, notes: initialNotes 
     setTimeout(() => setToast(null), 3000);
   }
 
-  async function handleStatusUpdate() {
+  function handleStatusUpdate() {
     setSaving(true);
-    await supabase
-      .from("applications")
-      .update({ current_status: status })
-      .eq("id", application.id);
+    updateApplicationStatus(application.id, status);
 
     showToast(`Status updated to "${APPLICATION_STATUSES[status].label}"`);
     console.log(`[EMAIL] Notification sent to ${application.email}: Status changed to ${APPLICATION_STATUSES[status].label}`);
@@ -49,35 +44,15 @@ export function ApplicationReview({ application, documents, notes: initialNotes 
     setTimeout(() => router.push("/admin"), 1200);
   }
 
-  async function handleDocReview(docId: string, reviewStatus: "approved" | "rejected") {
-    await supabase
-      .from("documents")
-      .update({ review_status: reviewStatus, reviewed_at: new Date().toISOString() })
-      .eq("id", docId);
-
+  function handleDocReview(docId: string, reviewStatus: "approved" | "rejected") {
+    reviewDocument(docId, reviewStatus);
     showToast(`Document ${reviewStatus}`);
-    router.refresh();
   }
 
-  async function handleAddNote() {
+  function handleAddNote() {
     if (!noteText.trim()) return;
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { data } = await supabase
-      .from("application_notes")
-      .insert({
-        application_id: application.id,
-        staff_user_id: user.id,
-        note: noteText.trim(),
-      })
-      .select("*, staff_user:staff_users(*)")
-      .single();
-
-    if (data) {
-      setNotes([data as ApplicationNote, ...notes]);
-    }
+    addNote(application.id, noteText.trim());
     setNoteText("");
     showToast("Note added");
   }
