@@ -1,15 +1,14 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Header } from "@/components/shared/header";
-import { createClient } from "@/lib/supabase/client";
+import { useDemoData, useHydrated } from "@/lib/demo-store";
 import { StatusBadge, DocStatusBadge } from "@/components/shared/status-badge";
 import { APPLICATION_STATUSES, DOCUMENT_TYPES, type ApplicationStatus } from "@/lib/constants";
 import { PASSPORT_TYPES } from "@/lib/constants";
 import { formatDate } from "@/lib/utils";
 import { Search, FileText, AlertCircle, CheckCircle, Clock, Upload, X } from "lucide-react";
-import type { Application, Document } from "@/types";
 
 const STATUS_INSTRUCTIONS: Partial<Record<ApplicationStatus, string>> = {
   submitted: "Your application has been received. It will be reviewed by our consular staff shortly.",
@@ -23,53 +22,32 @@ const STATUS_INSTRUCTIONS: Partial<Record<ApplicationStatus, string>> = {
 
 function TrackContent() {
   const searchParams = useSearchParams();
-  const supabase = createClient();
+  const data = useDemoData();
+  const hydrated = useHydrated();
 
   const [refNumber, setRefNumber] = useState(searchParams.get("ref") || "");
   const [emailInput, setEmailInput] = useState("");
-  const [application, setApplication] = useState<Application | null>(null);
-  const [documents, setDocuments] = useState<Document[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [searched, setSearched] = useState(false);
+  // Auto-search when arriving with ?ref= (skip email check for demo)
+  const [searchedRef, setSearchedRef] = useState(searchParams.get("ref")?.trim().toUpperCase() || "");
+  const searched = searchedRef !== "";
 
-  useEffect(() => {
-    if (searchParams.get("ref")) {
-      // Auto-search if ref is in URL (skip email check for demo)
-    }
-  }, [searchParams]);
+  // Derived from the demo store, so status changes made by staff in another tab show up live
+  const application = hydrated && searched
+    ? data.applications.find((a) => a.reference_number === searchedRef) ?? null
+    : null;
+  const documents = application
+    ? data.documents
+        .filter((d) => d.application_id === application.id)
+        .sort((a, b) => a.uploaded_at.localeCompare(b.uploaded_at))
+    : [];
+  const error = hydrated && searched && !application
+    ? "No application found with that reference number. Please check and try again."
+    : "";
 
-  async function handleSearch(e: React.FormEvent) {
+  function handleSearch(e: React.FormEvent) {
     e.preventDefault();
-    setError("");
-    setLoading(true);
-    setSearched(true);
-
-    const { data: app } = await supabase
-      .from("applications")
-      .select("*")
-      .eq("reference_number", refNumber.trim().toUpperCase())
-      .single();
-
-    if (!app) {
-      setError("No application found with that reference number. Please check and try again.");
-      setApplication(null);
-      setDocuments([]);
-      setLoading(false);
-      return;
-    }
-
     // In production, also verify email matches
-    setApplication(app as Application);
-
-    const { data: docs } = await supabase
-      .from("documents")
-      .select("*")
-      .eq("application_id", app.id)
-      .order("uploaded_at", { ascending: true });
-
-    setDocuments((docs ?? []) as Document[]);
-    setLoading(false);
+    setSearchedRef(refNumber.trim().toUpperCase());
   }
 
   const missingDocs = documents.filter((d) => d.review_status === "rejected");
@@ -111,11 +89,10 @@ function TrackContent() {
             </div>
             <button
               type="submit"
-              disabled={loading}
               className="w-full bg-primary text-white rounded-md py-3 text-sm font-medium hover:bg-primary-light transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
             >
               <Search className="h-4 w-4" />
-              {loading ? "Searching..." : "Track Application"}
+              Track Application
             </button>
           </form>
 
@@ -226,12 +203,6 @@ function TrackContent() {
                 <p className="text-sm text-text-muted text-center py-4">No documents uploaded.</p>
               )}
             </div>
-          </div>
-        )}
-
-        {searched && !application && !loading && !error && (
-          <div className="text-center text-sm text-text-muted py-8">
-            No results found.
           </div>
         )}
       </div>
