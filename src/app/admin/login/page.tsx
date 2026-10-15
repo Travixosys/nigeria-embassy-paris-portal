@@ -2,32 +2,20 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import { Shield } from "lucide-react";
+import { DEMO_OFFICER } from "@/lib/demo-store";
 
+// Demo mode: the staff portal is open. Fields are prefilled and any value is accepted.
 export default function AdminLoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [email, setEmail] = useState(DEMO_OFFICER.email);
+  const [password, setPassword] = useState("demo-access");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const supabase = createClient();
 
-  async function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError("");
     setLoading(true);
-
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-
-    if (error) {
-      setError("Invalid credentials. Please try again.");
-      setLoading(false);
-      return;
-    }
-
     router.push("/admin");
-    router.refresh();
   }
 
   return (
@@ -52,7 +40,6 @@ export default function AdminLoginPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                required
                 className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 placeholder="staff@embassy.gov.ng"
               />
@@ -67,16 +54,9 @@ export default function AdminLoginPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                required
                 className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               />
             </div>
-
-            {error && (
-              <div className="text-sm text-danger bg-red-50 rounded-md px-3 py-2">
-                {error}
-              </div>
-            )}
 
             <button
               type="submit"
@@ -85,6 +65,7 @@ export default function AdminLoginPage() {
             >
               {loading ? "Signing in..." : "Sign In"}
             </button>
+            <p className="text-xs text-text-muted text-center">Demo access: no credentials required.</p>
           </form>
         </div>
       </div>

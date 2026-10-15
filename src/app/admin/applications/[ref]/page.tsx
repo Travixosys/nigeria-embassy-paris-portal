@@ -1,41 +1,41 @@
-import { createClient } from "@/lib/supabase/server";
-import { notFound } from "next/navigation";
+"use client";
+
+import Link from "next/link";
+import { useParams } from "next/navigation";
 import { ApplicationReview } from "@/components/admin/application-review";
-import type { Application, Document, ApplicationNote } from "@/types";
+import { useDemoData, useHydrated } from "@/lib/demo-store";
 
-export const dynamic = "force-dynamic";
+export default function ApplicationDetailPage() {
+  const { ref } = useParams<{ ref: string }>();
+  const hydrated = useHydrated();
+  const { applications, documents, notes } = useDemoData();
 
-export default async function ApplicationDetailPage({ params }: { params: Promise<{ ref: string }> }) {
-  const { ref } = await params;
-  const supabase = await createClient();
+  if (!hydrated) return null;
 
-  const { data: application } = await supabase
-    .from("applications")
-    .select("*")
-    .eq("reference_number", ref)
-    .single();
+  const application = applications.find((a) => a.reference_number === ref);
 
-  if (!application) notFound();
-
-  const appId = application.id;
-
-  const { data: documents } = await supabase
-    .from("documents")
-    .select("*")
-    .eq("application_id", appId)
-    .order("uploaded_at", { ascending: true });
-
-  const { data: notes } = await supabase
-    .from("application_notes")
-    .select("*, staff_user:staff_users(*)")
-    .eq("application_id", appId)
-    .order("created_at", { ascending: false });
+  if (!application) {
+    return (
+      <div className="bg-surface rounded-lg border border-border shadow-sm px-6 py-12 text-center">
+        <p className="text-text font-medium">Application not found</p>
+        <p className="text-sm text-text-muted mt-1">No application matches reference {ref}.</p>
+        <Link href="/admin" className="inline-block mt-4 text-sm text-primary hover:underline">
+          Back to dashboard
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <ApplicationReview
-      application={application as Application}
-      documents={(documents ?? []) as Document[]}
-      notes={(notes ?? []) as ApplicationNote[]}
+      key={application.id}
+      application={application}
+      documents={documents
+        .filter((d) => d.application_id === application.id)
+        .sort((a, b) => a.uploaded_at.localeCompare(b.uploaded_at))}
+      notes={notes
+        .filter((n) => n.application_id === application.id)
+        .sort((a, b) => b.created_at.localeCompare(a.created_at))}
     />
   );
 }

@@ -2,16 +2,19 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Shield, LogOut } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { Shield, LogOut, RotateCcw } from "lucide-react";
+import { resetDemo } from "@/lib/demo-store";
 
 export function AdminHeader() {
   const router = useRouter();
-  const supabase = createClient();
 
-  async function handleLogout() {
-    await supabase.auth.signOut();
+  function handleLogout() {
     router.push("/admin/login");
+  }
+
+  function handleReset() {
+    resetDemo();
+    router.push("/admin");
   }
 
   return (
@@ -26,6 +29,14 @@ export function AdminHeader() {
             <Link href="/admin" className="hover:text-white/80 transition-colors">
               Dashboard
             </Link>
+            <button
+              onClick={handleReset}
+              className="flex items-center gap-1.5 hover:text-white/80 transition-colors cursor-pointer"
+              title="Restore the 20 demo applications"
+            >
+              <RotateCcw className="h-4 w-4" />
+              Reset demo
+            </button>
             <button
               onClick={handleLogout}
               className="flex items-center gap-1.5 hover:text-white/80 transition-colors cursor-pointer"

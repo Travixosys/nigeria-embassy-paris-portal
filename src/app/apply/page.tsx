@@ -3,9 +3,8 @@
 import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Header } from "@/components/shared/header";
-import { createClient } from "@/lib/supabase/client";
+import { createApplication, submitApplication } from "@/lib/demo-store";
 import { PASSPORT_TYPES, REQUIRED_DOCUMENTS, DOCUMENT_TYPES, type PassportType, type DocumentType } from "@/lib/constants";
-import { generateReferenceNumber } from "@/lib/utils";
 import { FileUp, CheckCircle, Upload, RefreshCw, FileText as FileIcon, Image as ImageIcon } from "lucide-react";
 
 interface FileUpload {
@@ -15,7 +14,6 @@ interface FileUpload {
 
 function ApplyForm() {
   const searchParams = useSearchParams();
-  const supabase = createClient();
   const [step, setStep] = useState<"form" | "upload" | "done">("form");
   const [loading, setLoading] = useState(false);
 
@@ -37,37 +35,23 @@ function ApplyForm() {
   const [referenceNumber, setReferenceNumber] = useState("");
   const [files, setFiles] = useState<FileUpload[]>([]);
 
-  async function handleFormSubmit(e: React.FormEvent) {
+  function handleFormSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
 
-    const refNumber = generateReferenceNumber();
+    const application = createApplication({
+      first_name: firstName,
+      last_name: lastName,
+      email,
+      phone,
+      date_of_birth: dateOfBirth || null,
+      gender: gender || null,
+      place_of_birth: placeOfBirth || null,
+      passport_type: passportType,
+    });
 
-    const { data, error } = await supabase
-      .from("applications")
-      .insert({
-        reference_number: refNumber,
-        first_name: firstName,
-        last_name: lastName,
-        email,
-        phone,
-        date_of_birth: dateOfBirth || null,
-        gender: gender || null,
-        place_of_birth: placeOfBirth || null,
-        passport_type: passportType,
-        current_status: "draft",
-      })
-      .select()
-      .single();
-
-    if (error || !data) {
-      alert("Error creating application. Please try again.");
-      setLoading(false);
-      return;
-    }
-
-    setApplicationId(data.id);
-    setReferenceNumber(refNumber);
+    setApplicationId(application.id);
+    setReferenceNumber(application.reference_number);
 
     // Initialize file upload slots based on passport type
     const required = REQUIRED_DOCUMENTS[passportType];
@@ -81,43 +65,15 @@ function ApplyForm() {
     setFiles((prev) => prev.map((f, i) => (i === index ? { ...f, file } : f)));
   }
 
-  async function handleUploadSubmit(e: React.FormEvent) {
+  function handleUploadSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
 
-    const filesToUpload = files.filter((f) => f.file);
-
-    for (const { type, file } of filesToUpload) {
-      if (!file) continue;
-
-      const filePath = `${applicationId}/${type}_${Date.now()}_${file.name}`;
-      const { error: uploadError } = await supabase.storage
-        .from("documents")
-        .upload(filePath, file);
-
-      if (uploadError) {
-        console.error("Upload error:", uploadError);
-        continue;
-      }
-
-      const { data: { publicUrl } } = supabase.storage
-        .from("documents")
-        .getPublicUrl(filePath);
-
-      await supabase.from("documents").insert({
-        application_id: applicationId,
-        document_type: type,
-        file_url: publicUrl,
-        file_name: file.name,
-        review_status: "pending",
-      });
-    }
-
-    // Update status to submitted
-    await supabase
-      .from("applications")
-      .update({ current_status: "submitted", submitted_at: new Date().toISOString() })
-      .eq("id", applicationId);
+    // Demo: only the file names are kept, the files themselves never leave the browser
+    submitApplication(
+      applicationId,
+      files.flatMap(({ type, file }) => (file ? [{ type, name: file.name }] : []))
+    );
 
     console.log(`[EMAIL] Confirmation sent to ${email}: Application ${referenceNumber} submitted successfully.`);
 
